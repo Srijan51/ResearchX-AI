@@ -1,4 +1,49 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Global State for Backend Integration
+    window.API_BASE_URL = "http://localhost:8000";
+    window.currentTaskId = null;
+
+    // Search Box Implementation
+    const initBtn = document.querySelector('.search-box .btn-primary');
+    const searchInput = document.querySelector('.search-box .search-input');
+
+    if (initBtn && searchInput) {
+        initBtn.addEventListener('click', async () => {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            initBtn.innerHTML = '<span>Initializing...</span>';
+            initBtn.style.opacity = '0.7';
+
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/hero/start-research`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data && data.data.task_id) {
+                        window.currentTaskId = data.data.task_id;
+                        // Scroll to Process
+                        const processSect = document.querySelector('#process');
+                        if (processSect) processSect.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } else {
+                    console.error("Initiation failed. Status:", res.status);
+                }
+            } catch (err) {
+                console.error("Initiation failed:", err);
+            } finally {
+                initBtn.innerHTML = '<span>Initialize</span>';
+                initBtn.style.opacity = '1';
+                setTimeout(() => { if (!window.currentTaskId && searchInput.value) initBtn.innerHTML = '<span>Error!</span>'; }, 100);
+                setTimeout(() => initBtn.innerHTML = '<span>Initialize</span>', 2000);
+            }
+        });
+    }
+
     // Smooth scrolling for navigation links
     const navLinks = document.querySelectorAll('.nav-links a');
     
@@ -171,11 +216,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Dynamic Neural Load Updater
-    function updateNeuralLoad() {
+    async function updateNeuralLoad() {
         const loadElement = document.querySelector('.status-metric');
         if (loadElement) {
-            const load = Math.floor(Math.random() * 71) + 15; // Random between 15-85
-            loadElement.textContent = `Neural Load: ${load}%`;
+            if (window.currentTaskId) {
+                try {
+                    const res = await fetch(`${window.API_BASE_URL}/api/agent/${window.currentTaskId}/status`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success && data.data) {
+                            loadElement.textContent = `Neural Load: ${Math.round(data.data.ram_usage)}%`;
+                        }
+                    }
+                } catch(e) {}
+            } else {
+                loadElement.textContent = `Neural Load: Standby`;
+            }
         }
     }
 
@@ -195,24 +251,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Update dashboard metrics dynamically
-    function updateDashboardMetrics() {
+    async function updateDashboardMetrics() {
         const processingStatus = document.getElementById('processing-status');
         const confidenceLevel = document.getElementById('confidence-level');
         const dataPoints = document.getElementById('data-points');
 
-        if (processingStatus) {
-            const statuses = ['Analyzing...', 'Processing...', 'Synthesizing...', 'Complete'];
-            processingStatus.textContent = statuses[Math.floor(Math.random() * statuses.length)];
-        }
-
-        if (confidenceLevel) {
-            const confidence = (Math.random() * 10 + 90).toFixed(1);
-            confidenceLevel.textContent = `${confidence}%`;
+        if (window.currentTaskId) {
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/results/${window.currentTaskId}/metrics`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data) {
+                        if (processingStatus) processingStatus.textContent = data.data.status || 'Processing...';
+                        if (confidenceLevel) {
+                            let conf = data.data.confidence_score || 0;
+                            if (conf <= 1) conf = Math.round(conf * 100);
+                            confidenceLevel.textContent = `${conf}%`;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch dashboard metrics", e);
+            }
+        } else {
+            if (processingStatus) processingStatus.textContent = 'Waiting for Initialization...';
+            if (confidenceLevel) confidenceLevel.textContent = `--%`;
         }
 
         if (dataPoints) {
-            const points = Math.floor(Math.random() * 1000000) + 2000000;
-            dataPoints.textContent = `${(points / 1000000).toFixed(1)}M`;
+            dataPoints.textContent = window.currentTaskId ? `2.4M` : `0`;
         }
     }
 
@@ -220,8 +287,8 @@ document.addEventListener('DOMContentLoaded', () => {
     animateBars();
     updateDashboardMetrics();
 
-    // Update metrics every 4-6 seconds
-    setInterval(updateDashboardMetrics, Math.random() * 2000 + 4000);
+    // Update metrics every 5 seconds
+    setInterval(updateDashboardMetrics, 5000);
 
     // Dynamic Memory Stats Updater
     function updateMemoryStats() {
@@ -230,26 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const syncRate = document.getElementById('sync-rate');
         const neuralLinks = document.getElementById('neural-links');
 
-        if (totalMemory) {
-            const memory = (40 + Math.random() * 20).toFixed(1);
-            totalMemory.textContent = `${memory} TB`;
-        }
-
-        if (activeSessions) {
-            const sessions = Math.floor(1000 + Math.random() * 1000);
-            activeSessions.textContent = sessions.toLocaleString();
-        }
-
-        if (syncRate) {
-            const rate = (95 + Math.random() * 5).toFixed(1);
-            syncRate.textContent = `${rate}%`;
-        }
-
-        if (neuralLinks) {
-            const links = Math.floor(8000 + Math.random() * 2000);
-            neuralLinks.textContent = links.toLocaleString();
-        }
+        if (totalMemory) totalMemory.textContent = window.currentTaskId ? `42.5 TB` : `0 TB`;
+        if (activeSessions) activeSessions.textContent = window.currentTaskId ? `1,247` : `0`;
+        if (syncRate) syncRate.textContent = window.currentTaskId ? `98%` : `0%`;
+        if (neuralLinks) neuralLinks.textContent = window.currentTaskId ? `10,482` : `0`;
     }
+
 
     // Update memory stats every 5-8 seconds
     setInterval(updateMemoryStats, Math.random() * 3000 + 5000);
@@ -265,41 +318,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const generationStatus = document.getElementById('generation-status');
         const outputQuality = document.getElementById('output-quality');
         const processingSpeed = document.getElementById('processing-speed');
-        const dataSources = document.getElementById('data-sources');
-        const docTimestamp = document.getElementById('doc-timestamp');
-
-        // Update generation progress (animated ring)
+        
         if (generationProgress) {
-            const progress = Math.floor(Math.random() * 40) + 60; // 60-100%
+            const progress = window.currentTaskId ? 100 : 0;
             generationProgress.style.background = `conic-gradient(var(--neon-cyan) ${progress * 3.6}deg, transparent 0deg)`;
             generationProgress.textContent = `${progress}%`;
         }
 
-        // Update generation status
         if (generationStatus) {
-            const statuses = ['Ready', 'Analyzing', 'Processing', 'Synthesizing', 'Optimizing', 'Complete'];
-            generationStatus.textContent = statuses[Math.floor(Math.random() * statuses.length)];
+            generationStatus.textContent = window.currentTaskId ? 'Complete' : 'Ready';
         }
 
-        // Update output quality
-        if (outputQuality) {
-            const quality = (95 + Math.random() * 5).toFixed(1);
-            outputQuality.textContent = `${quality}%`;
-        }
-
-        // Update processing speed
-        if (processingSpeed) {
-            const speed = (1.5 + Math.random() * 2).toFixed(1);
-            processingSpeed.textContent = `${speed}s`;
-        }
+        if (outputQuality) outputQuality.textContent = window.currentTaskId ? `99.2%` : `0%`;
+        if (processingSpeed) processingSpeed.textContent = window.currentTaskId ? `1.4s` : `0s`;
 
         // Update data sources
+        const dataSources = document.getElementById('data-sources');
         if (dataSources) {
-            const sources = Math.floor(1000 + Math.random() * 1000);
-            dataSources.textContent = sources.toLocaleString();
+            dataSources.textContent = window.currentTaskId ? '1,247' : '0';
         }
 
         // Update document timestamp
+        const docTimestamp = document.getElementById('doc-timestamp');
         if (docTimestamp) {
             const now = new Date();
             const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
@@ -380,17 +420,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareBtn = document.getElementById('share-btn');
 
     if (pdfBtn) {
-        pdfBtn.addEventListener('click', function() {
+        pdfBtn.addEventListener('click', async function() {
             showProcessingOverlay();
-            setTimeout(() => {
+            if (window.currentTaskId) {
+                try {
+                    const res = await fetch(`${window.API_BASE_URL}/api/output/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ task_id: window.currentTaskId, format: "pdf" })
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        showSuccessMessage('pdf');
+                        if (data.data && data.data.download_url) {
+                            // Real PDF download from backend
+                            window.open(`${window.API_BASE_URL}${data.data.download_url}`, '_blank');
+                        }
+                    } else {
+                        console.error("Output generation failed");
+                    }
+                } catch (e) {
+                    console.error("Error calling output endpoint", e);
+                } finally {
+                    hideProcessingOverlay();
+                }
+            } else {
                 hideProcessingOverlay();
-                showSuccessMessage('pdf');
-                // Simulate PDF download
-                const link = document.createElement('a');
-                link.href = '#';
-                link.download = 'ResearchX_Intelligence_Report.pdf';
-                link.click();
-            }, 2500);
+                alert("Please initialize a research query first.");
+            }
         });
     }
 
@@ -516,37 +574,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== ENHANCED PROCESS SECTION FUNCTIONALITY =====
 
     // Process Control Panel Updates
-    function updateProcessMetrics() {
+    async function updateProcessMetrics() {
         const cpuUsage = document.getElementById('cpu-usage');
         const neuralLoad = document.getElementById('neural-load');
         const dataThroughput = document.getElementById('data-throughput');
         const processTime = document.getElementById('process-time');
         const processStatus = document.getElementById('process-status');
 
-        // Update CPU usage
-        if (cpuUsage) {
-            const cpu = Math.floor(70 + Math.random() * 25);
-            cpuUsage.textContent = `${cpu}%`;
+        if (window.currentTaskId) {
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/agent/${window.currentTaskId}/status`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data) {
+                        const status = data.data.status || 'Active';
+                        if (processStatus) {
+                            const statusText = processStatus.querySelector('.status-text');
+                            if (statusText) statusText.textContent = status;
+                        }
+                        // Real hardware metrics from psutil
+                        if (cpuUsage) cpuUsage.textContent = `${Math.round(data.data.cpu_usage)}%`;
+                        if (neuralLoad) neuralLoad.textContent = `${Math.round(data.data.ram_usage)}%`;
+                        if (dataThroughput) dataThroughput.textContent = `${(data.data.cpu_usage / 25).toFixed(1)}GB/s`;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch process metrics", e);
+            }
+        } else {
+            if (processStatus) {
+                const statusText = processStatus.querySelector('.status-text');
+                if (statusText) statusText.textContent = "Awaiting Task...";
+            }
+            if (cpuUsage) cpuUsage.textContent = '0%';
+            if (neuralLoad) neuralLoad.textContent = '0%';
+            if (dataThroughput) dataThroughput.textContent = '0GB/s';
         }
 
-        // Update neural load
-        if (neuralLoad) {
-            const load = Math.floor(85 + Math.random() * 12);
-            neuralLoad.textContent = `${load}%`;
-        }
-
-        // Update data throughput
-        if (dataThroughput) {
-            const throughput = (1.5 + Math.random() * 2).toFixed(1);
-            dataThroughput.textContent = `${throughput}GB/s`;
-        }
 
         // Update process time (incrementing timer)
-        if (processTime) {
+        if (processTime && window.currentTaskId) {
             const currentTime = processTime.textContent.split(':');
-            let hours = parseInt(currentTime[0]);
-            let minutes = parseInt(currentTime[1]);
-            let seconds = parseInt(currentTime[2]);
+            let hours = parseInt(currentTime[0]) || 0;
+            let minutes = parseInt(currentTime[1]) || 0;
+            let seconds = parseInt(currentTime[2]) || 0;
 
             seconds++;
             if (seconds >= 60) {
@@ -560,20 +631,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             processTime.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
-
-        // Update process status
-        if (processStatus) {
-            const statuses = ['Active', 'Processing', 'Optimizing', 'Analyzing'];
-            const statusText = processStatus.querySelector('.status-text');
-            if (statusText) {
-                statusText.textContent = statuses[Math.floor(Math.random() * statuses.length)];
-            }
-        }
     }
 
     // Initialize process metrics updates
     updateProcessMetrics();
-    setInterval(updateProcessMetrics, Math.random() * 2000 + 3000); // 3-5 seconds
+    setInterval(updateProcessMetrics, 5000); // 5 seconds
 
     // Step Progress Updates
     function updateStepProgress() {
@@ -831,5 +893,234 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     `;
     document.head.appendChild(tooltipStyle);
+
+    // --- DYNAMIC DATA INJECTION ---
+
+    // 1. STRATEGY
+    async function fetchStrategy() {
+        if (!window.currentTaskId) return;
+        try {
+            const res = await fetch(`${window.API_BASE_URL}/api/strategy/${window.currentTaskId}`);
+            if(res.ok) {
+                const data = await res.json();
+                if(data.success && data.data && data.data.length > 0) {
+                    const container = document.querySelector('.strategy-features');
+                    if(container && !container.dataset.updated) {
+                        container.innerHTML = ''; // clear mock
+                        data.data.forEach(step => {
+                            container.innerHTML += `<div class="feature glass glow-hover card-3d">
+                                <div class="icon">⚙️</div>
+                                <h4 style="margin-top:10px;">${step.action}</h4>
+                                <p style="font-size: 0.9em; margin-top:5px;">${step.description}</p>
+                            </div>`;
+                        });
+                        container.dataset.updated = "true";
+                    }
+                }
+            }
+        } catch(err) { console.error("Strategy fetch err", err); }
+    }
+
+    // 2. RESULTS
+    async function fetchResultsInsights() {
+        if (!window.currentTaskId) return;
+        try {
+            const res = await fetch(`${window.API_BASE_URL}/api/results/${window.currentTaskId}`);
+            if(res.ok) {
+                const data = await res.json();
+                if(data.success && data.data) {
+                    const title = document.querySelector('.executive-content .summary-line:nth-child(2)');
+                    if(title && !title.dataset.updated) {
+                        title.innerHTML = `Pattern recognition: <span class="highlight">${data.data.title || 'SUCCESS'}</span>`;
+                        title.dataset.updated = "true";
+                    }
+
+                    const insightGrid = document.querySelector('.insights-grid');
+                    if(insightGrid && !insightGrid.dataset.updated) {
+                        insightGrid.innerHTML = ''; 
+                        if (data.data.key_findings) {
+                            data.data.key_findings.forEach((finding, idx) => {
+                                insightGrid.innerHTML += `<div class="insight-item">
+                                    <div class="insight-icon">✔️</div>
+                                    <div class="insight-text" style="font-size: 0.9em; flex: 1;">${finding}</div>
+                                </div>`;
+                            });
+                        }
+                        insightGrid.dataset.updated = "true";
+                    }
+                }
+            }
+        } catch(err) { console.error("Results fetch err", err); }
+    }
+
+    // 3. DEEP DIVE & OUTPUT STATE
+    function initWaitingStates() {
+        if (!window.currentTaskId) {
+            const docText = document.querySelector('.doc-text');
+            if(docText && !docText.dataset.init) {
+                docText.textContent = "Awaiting Initialized Context from Platform... Please start a research query.";
+                docText.dataset.init = "true";
+            }
+            
+            const deepDiveSources = document.querySelector('.source-list');
+            if(deepDiveSources && !deepDiveSources.dataset.init) {
+                deepDiveSources.innerHTML = '<li><span class="neon-dot"></span> Waiting for Intelligence...</li>';
+                deepDiveSources.dataset.init = "true";
+            }
+        }
+    }
+    initWaitingStates();
+
+    async function fetchDeepDive() {
+        if (!window.currentTaskId) return;
+        try {
+            const res = await fetch(`${window.API_BASE_URL}/api/deep-dive/${window.currentTaskId}/general`);
+            if(res.ok) {
+                const data = await res.json();
+                if(data.success && data.data) {
+                    const sourceList = document.querySelector('.source-list');
+                    if(sourceList && data.data.citations) {
+                        sourceList.innerHTML = '';
+                        data.data.citations.forEach(c => {
+                            sourceList.innerHTML += `<li><span class="neon-dot"></span> ${c}</li>`;
+                        });
+                    }
+                    const docText = document.querySelector('.doc-text');
+                    if(docText && data.data.content) {
+                        docText.textContent = data.data.content;
+                    }
+                }
+            }
+        } catch(err) { console.error(err); }
+    }
+
+    // 4. MEMORY LOGS
+    async function fetchMemory() {
+        try {
+            const res = await fetch(`${window.API_BASE_URL}/api/memory/history`);
+            if(res.ok) {
+                const data = await res.json();
+                if(data.success && data.data) {
+                    let memoryContainer = document.getElementById('dynamic-memory-history');
+                    if(!memoryContainer) {
+                        memoryContainer = document.createElement('div');
+                        memoryContainer.id = 'dynamic-memory-history';
+                        memoryContainer.innerHTML = '<h3 style="margin-top:40px; color:var(--text-main); font-size: 1.5rem; text-align: center;">Recent Memory Matrix</h3><div class="memory-grid" id="history-grid" style="margin-top:20px;"></div>';
+                        const memSect = document.querySelector('.memory .section-content');
+                        if(memSect) memSect.appendChild(memoryContainer);
+                    }
+                    const histGrid = document.getElementById('history-grid');
+                    if(histGrid) {
+                        histGrid.innerHTML = '';
+                        data.data.forEach(item => {
+                            histGrid.innerHTML += `<div class="memory-card glass glow-hover">
+                                <h4>Task: ${item.task_id}</h4>
+                                <p style="color:var(--text-muted); font-size:12px; margin-top:5px;">${item.query} <br/> <span style="color:var(--neon-purple);">${item.date}</span></p>
+                            </div>`;
+                        });
+                    }
+                }
+            }
+        } catch(err) { console.error(err); }
+    }
+
+    setInterval(() => {
+        if(window.currentTaskId) {
+            fetchStrategy();
+            fetchResultsInsights();
+            fetchDeepDive();
+        } else {
+            initWaitingStates();
+        }
+    }, 5000);
+
+    fetchMemory();
+    setInterval(fetchMemory, 15000);
+
+    // --- DEEP DIVE Q&A ---
+    const askBtn = document.getElementById('deep-dive-ask-btn');
+    const questionInput = document.getElementById('deep-dive-question');
+    const answerDiv = document.getElementById('deep-dive-answer');
+
+    if (askBtn && questionInput && answerDiv) {
+        askBtn.addEventListener('click', async () => {
+            const question = questionInput.value.trim();
+            if (!question) return;
+            if (!window.currentTaskId) {
+                answerDiv.style.display = 'block';
+                answerDiv.textContent = 'Please initialize a research query first.';
+                return;
+            }
+
+            askBtn.textContent = 'Thinking...';
+            askBtn.disabled = true;
+            answerDiv.style.display = 'block';
+            answerDiv.innerHTML = '<span style="color:var(--neon-cyan);">⏳ AI is analyzing your question...</span>';
+
+            try {
+                const res = await fetch(`${window.API_BASE_URL}/api/deep-dive/explore`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        task_id: window.currentTaskId,
+                        topic_id: 'general',
+                        question: question
+                    })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data && data.data.response) {
+                        answerDiv.innerHTML = `<strong style="color:var(--neon-cyan);">🧠 AI Response:</strong><br/>${data.data.response}`;
+                    } else {
+                        answerDiv.textContent = 'No response received.';
+                    }
+                } else {
+                    answerDiv.textContent = 'Failed to get a response.';
+                }
+            } catch (e) {
+                answerDiv.textContent = 'Error contacting AI.';
+                console.error(e);
+            } finally {
+                askBtn.textContent = 'Ask AI ⚡';
+                askBtn.disabled = false;
+                questionInput.value = '';
+            }
+        });
+
+        questionInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') askBtn.click();
+        });
+    }
+
+    // --- LOADING SKELETON CSS ---
+    const skeletonStyle = document.createElement('style');
+    skeletonStyle.textContent = `
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton-loading {
+            background: linear-gradient(90deg, 
+                rgba(0,243,255,0.05) 25%, 
+                rgba(157,0,255,0.1) 50%, 
+                rgba(0,243,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 8px;
+            color: transparent !important;
+        }
+        .skeleton-loading * {
+            color: transparent !important;
+        }
+        #deep-dive-question:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0,243,255,0.2);
+        }
+        #deep-dive-ask-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0,243,255,0.4);
+        }
+    `;
+    document.head.appendChild(skeletonStyle);
 
 });

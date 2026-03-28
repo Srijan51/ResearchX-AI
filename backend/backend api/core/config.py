@@ -6,7 +6,8 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     
     # AI Providers
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
 
     # Environment
     ENVIRONMENT: str = "development"

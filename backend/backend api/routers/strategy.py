@@ -17,6 +17,9 @@ async def get_strategy(task_id: str):
     """Retrieve the AI's internal reasoning and planned steps."""
     strategy_data = await research.get_strategy_for_task(task_id)
     
+    if not strategy_data:
+        return StandardResponse(success=False, error="Strategy not ready")
+        
     # Map the dict from the service into StrategyStep models
     steps = [StrategyStep(**step_data) for step_data in strategy_data]
         
