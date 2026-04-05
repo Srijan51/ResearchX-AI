@@ -11,3 +11,4 @@ langchain-openai
 ollama
 reportlab
 psutil
+slowapi
