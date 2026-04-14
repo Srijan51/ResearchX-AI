@@ -177,17 +177,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Parallax effect for floating elements
+    // Parallax effect for floating elements & Pipeline 3D depth
     const heroFloatingItems = document.querySelectorAll('.floating-item');
+    const pipelineStage = document.querySelector('.pipeline-stage');
+    const aiModules = document.querySelectorAll('.ai-module');
+
     window.addEventListener('mousemove', (e) => {
         const x = e.clientX / window.innerWidth;
         const y = e.clientY / window.innerHeight;
 
+        // Origin hero parallax
         heroFloatingItems.forEach(item => {
             const speed = item.getAttribute('data-parallax') || 0.1;
             const xOffset = (x - 0.5) * speed * 100;
             const yOffset = (y - 0.5) * speed * 100;
             item.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        });
+
+        // Pipeline cinematic parallax
+        if (pipelineStage) {
+            // Subtle rotation of the entire stage
+            const rotateY = (x - 0.5) * 8; // Max 4deg
+            const rotateX = (0.5 - y) * 8 + 4; // Center offset to keep tilt
+            pipelineStage.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        }
+
+        aiModules.forEach((module, index) => {
+            // Depth layers move in different speeds
+            const depthFactor = module.classList.contains('depth-bg') ? 0.3 : 
+                                module.classList.contains('depth-mid') ? 0.6 : 1.2;
+            const modXOffset = (x - 0.5) * depthFactor * 40;
+            const modYOffset = (y - 0.5) * depthFactor * 20;
+
+            // Retrieve or reset scale from class
+            const scale = module.classList.contains('depth-bg') ? 0.84 : 
+                          module.classList.contains('depth-mid') ? 0.92 : 1;
+
+            module.style.transform = `translate(${modXOffset}px, ${modYOffset}px) scale(${scale})`;
         });
     });
     
@@ -455,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const notification = document.createElement('div');
         notification.className = 'success-notification';
         notification.innerHTML = `
-            <div class="success-icon">✅</div>
+            <div class="success-icon">âœ…</div>
             <div class="success-text">
                 <div class="success-title">${format.toUpperCase()} Export Complete</div>
                 <div class="success-desc">Your research intelligence has been generated successfully</div>
@@ -528,10 +554,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Toggle API stream
             this.classList.toggle('active');
             if (this.classList.contains('active')) {
-                this.innerHTML = '<span>🔄 API Stream Active</span>';
+                this.innerHTML = '<span>ðŸ”„ API Stream Active</span>';
                 startAPIStream();
             } else {
-                this.innerHTML = '<span>🔗 Data API Stream</span>';
+                this.innerHTML = '<span>ðŸ”— Data API Stream</span>';
                 stopAPIStream();
             }
         });
@@ -985,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         container.innerHTML = ''; // clear mock
                         data.data.forEach(step => {
                             container.innerHTML += `<div class="feature glass glow-hover card-3d">
-                                <div class="icon">⚙️</div>
+                                <div class="icon">âš™ï¸</div>
                                 <h4 style="margin-top:10px;">${step.action}</h4>
                                 <p style="font-size: 0.9em; margin-top:5px;">${step.description}</p>
                             </div>`;
@@ -1017,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (data.data.key_findings) {
                             data.data.key_findings.forEach((finding, idx) => {
                                 insightGrid.innerHTML += `<div class="insight-item">
-                                    <div class="insight-icon">✔️</div>
+                                    <div class="insight-icon">âœ”ï¸</div>
                                     <div class="insight-text" style="font-size: 0.9em; flex: 1;">${finding}</div>
                                 </div>`;
                             });
@@ -1134,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             askBtn.textContent = 'Thinking...';
             askBtn.disabled = true;
             answerDiv.style.display = 'block';
-            answerDiv.innerHTML = '<span style="color:var(--neon-cyan);">⏳ AI is analyzing your question...</span>';
+            answerDiv.innerHTML = '<span style="color:var(--neon-cyan);">â³ AI is analyzing your question...</span>';
 
             try {
                 const res = await fetch(`${window.API_BASE_URL}/api/deep-dive/explore`, {
@@ -1149,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && data.data && data.data.response) {
-                        answerDiv.innerHTML = `<strong style="color:var(--neon-cyan);">🧠 AI Response:</strong><br/>${data.data.response}`;
+                        answerDiv.innerHTML = `<strong style="color:var(--neon-cyan);">ðŸ§  AI Response:</strong><br/>${data.data.response}`;
                     } else {
                         answerDiv.textContent = 'No response received.';
                     }
@@ -1160,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 answerDiv.textContent = 'Error contacting AI.';
                 console.error(e);
             } finally {
-                askBtn.textContent = 'Ask AI ⚡';
+                askBtn.textContent = 'Ask AI âš¡';
                 askBtn.disabled = false;
                 questionInput.value = '';
             }
@@ -1215,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = document.querySelector('.findings-list');
         if (title && data.title) title.textContent = data.title;
         if (list && Array.isArray(data.key_findings)) {
-            list.innerHTML = data.key_findings.map(f => `<li><span class="finding-icon">✓</span> ${f}</li>`).join('');
+            list.innerHTML = data.key_findings.map(f => `<li><span class="finding-icon">âœ“</span> ${f}</li>`).join('');
         }
     }
 
@@ -1351,6 +1377,374 @@ document.addEventListener('DOMContentLoaded', () => {
             nodeEl.textContent = `Node: ${randomNode}`;
         }, 4000);
     }
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    //  MEMORY UNIVERSE â€” Optimised 3D Canvas Engine
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    (function initMemoryUniverse() {
+        const section  = document.getElementById('memory');
+        const canvas   = document.getElementById('mu-canvas');
+        const starsCvs = document.getElementById('mu-stars-canvas');
+        const modal    = document.getElementById('mu-modal');
+        const mClose   = document.getElementById('mu-modal-close');
+        if (!section || !canvas || !starsCvs) return;
+
+        const ctx  = canvas.getContext('2d', { alpha: true });
+        const sCtx = starsCvs.getContext('2d', { alpha: true });
+
+        // â”€â”€ Disable image smoothing for sharp rendering â”€â”€
+        ctx.imageSmoothingEnabled = false;
+
+        // â”€â”€ Cluster data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        const CLUSTER_DATA = [
+            { label:'Research Hub',    icon:'ðŸ§ ', desc:'Central knowledge repository linking all research threads and semantic associations across the neural fabric.',        tags:['Research','Core','Semantic'],    integrity:98, color:[0,243,255],  r:13 },
+            { label:'Quantum Analysis',icon:'âš›ï¸', desc:'Quantum-accelerated data processing cluster for multi-dimensional probability vector computations.',                  tags:['Quantum','Analysis','Vector'],   integrity:95, color:[157,0,255],  r:10 },
+            { label:'Market Signals',  icon:'ðŸ“ˆ', desc:'Real-time market sentiment aggregation and predictive forecasting with high-frequency data streams.',                 tags:['Market','Sentiment','Forecast'], integrity:92, color:[0,200,255],  r:9  },
+            { label:'Neural Pathways', icon:'ðŸŒ', desc:'Global knowledge mesh connecting distributed research nodes via synaptic cross-referencing algorithms.',              tags:['Neural','Global','Mesh'],        integrity:99, color:[200,0,255],  r:8  },
+            { label:'Insight Engine',  icon:'ðŸ’¡', desc:'Autonomous insight generation system that synthesizes patterns into actionable intelligence outputs.',                tags:['Insights','Synthesis','AI'],     integrity:97, color:[255,210,0],  r:9  },
+            { label:'Deep Archive',    icon:'ðŸ“¦', desc:'Long-term memory archive storing compressed research vectors for future contextual retrieval.',                       tags:['Archive','Memory','Storage'],    integrity:89, color:[0,150,255],  r:7  },
+        ];
+
+        function makeNodes(count, spread, parentR) {
+            return Array.from({ length: count }, () => ({
+                ox: (Math.random()-0.5)*spread,
+                oy: (Math.random()-0.5)*spread,
+                oz: (Math.random()-0.5)*spread*0.4,
+                r:  parentR*(0.22+Math.random()*0.28),
+                phaseX: Math.random()*Math.PI*2,
+                phaseY: Math.random()*Math.PI*2,
+                speed:  0.35+Math.random()*0.45,
+            }));
+        }
+
+        const clusters = CLUSTER_DATA.map((d, i) => ({
+            ...d,
+            angle:      (i/CLUSTER_DATA.length)*Math.PI*2,
+            radius:     145+Math.random()*90,
+            tiltY:      (Math.random()-0.5)*0.7,
+            rotSpeed:   (0.07+Math.random()*0.06)*(Math.random()>0.5?1:-1),
+            floatPhase: Math.random()*Math.PI*2,
+            nodes:      makeNodes(3+Math.floor(Math.random()*3), 60, d.r),
+            hovered:    false,
+            sx:0, sy:0, screenR:0,
+        }));
+
+        // 11 connections
+        const CONNS = [[0,1],[0,2],[0,3],[0,4],[0,5],[1,2],[2,3],[3,4],[4,5],[1,5],[2,4]];
+
+        // â”€â”€ State â”€â”€
+        let W=0, H=0, DPR=1;
+        let camX=0, camY=0;
+        let mouseX=0.5, mouseY=0.5;
+        let parallaX=0, parallaY=0;
+        let hoveredIdx=null;
+        let t=0, frameCount=0;
+        let isVisible=false; // IntersectionObserver gate
+        let rafId=null;
+
+        // â”€â”€ Size canvas with capped DPR for performance â”€â”€
+        function resize() {
+            DPR = Math.min(window.devicePixelRatio||1, 1.5); // cap at 1.5x
+            const rect = section.getBoundingClientRect();
+            W = rect.width  || window.innerWidth;
+            H = rect.height || window.innerHeight;
+            canvas.width  = W*DPR; canvas.height  = H*DPR; canvas.style.width  = W+'px'; canvas.style.height  = H+'px';
+            starsCvs.width= W*DPR; starsCvs.height= H*DPR; starsCvs.style.width= W+'px'; starsCvs.style.height= H+'px';
+            ctx.setTransform(DPR,0,0,DPR,0,0);
+            sCtx.setTransform(DPR,0,0,DPR,0,0);
+        }
+
+        // â”€â”€ Star field (painted once, twinkled cheaply) â”€â”€
+        const STARS = Array.from({length:200}, ()=>({
+            x:Math.random(), y:Math.random(),
+            r:Math.random()*1.2+0.2,
+            o:Math.random()*0.5+0.1,
+            tw:Math.random()*Math.PI*2,
+            ts:0.004+Math.random()*0.006,
+        }));
+        function animStars() {
+            sCtx.clearRect(0,0,W,H);
+            STARS.forEach(s=>{
+                s.tw += s.ts;
+                const o = s.o*(0.5+0.5*Math.sin(s.tw));
+                sCtx.globalAlpha = o;
+                sCtx.fillStyle   = '#fff';
+                sCtx.beginPath();
+                sCtx.arc(s.x*W, s.y*H, s.r, 0, Math.PI*2);
+                sCtx.fill();
+            });
+            sCtx.globalAlpha = 1;
+        }
+
+        // â”€â”€ Projection â”€â”€
+        const FOV = 680;
+        function project(x3,y3,z3){
+            const cx = W/2 + camX + parallaX;
+            const cy = H/2 + camY + parallaY;
+            const d  = FOV/(FOV+z3);
+            return { sx: cx+x3*d, sy: cy+y3*d, depth:d, z:z3 };
+        }
+
+        // â”€â”€ Cluster world position â”€â”€
+        function clusterPos(c){
+            const a  = c.angle + t*c.rotSpeed*0.4;
+            const fy = 7*Math.sin(c.floatPhase + t*0.28);
+            return {
+                x: Math.cos(a)*c.radius,
+                y: Math.sin(a*0.7)*c.radius*0.38 + fy,
+                z: Math.sin(a)*c.radius*0.48 + c.tiltY*75,
+            };
+        }
+
+        // â”€â”€ rgba helper â”€â”€
+        function rgba(rgb,a){ return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`; }
+
+        // â”€â”€ Draw curved connection â”€â”€
+        function drawConn(p1,p2,c1,c2){
+            const d = (p1.depth+p2.depth)*0.5;
+            const mx = (p1.sx+p2.sx)*0.5 + Math.sin(t*0.45)*25;
+            const my = (p1.sy+p2.sy)*0.5 + Math.cos(t*0.35)*18;
+            const g  = ctx.createLinearGradient(p1.sx,p1.sy,p2.sx,p2.sy);
+            g.addColorStop(0,   rgba(c1.color, 0.12*d));
+            g.addColorStop(0.5, rgba([130,80,255], 0.18*d));
+            g.addColorStop(1,   rgba(c2.color, 0.12*d));
+            ctx.beginPath();
+            ctx.moveTo(p1.sx,p1.sy);
+            ctx.quadraticCurveTo(mx,my,p2.sx,p2.sy);
+            ctx.strokeStyle = g;
+            ctx.lineWidth   = 0.7*d;
+            ctx.stroke();
+        }
+
+        // â”€â”€ Draw light pulse travelling on bezier â”€â”€
+        const pulseTimes = CONNS.map(()=>Math.random());
+        function drawPulse(p1,p2,pt,color,r){
+            const tt = pt%1;
+            const mx = (p1.sx+p2.sx)*0.5 + Math.sin(t*0.45)*25;
+            const my = (p1.sy+p2.sy)*0.5 + Math.cos(t*0.35)*18;
+            const bx = (1-tt)*(1-tt)*p1.sx + 2*(1-tt)*tt*mx + tt*tt*p2.sx;
+            const by = (1-tt)*(1-tt)*p1.sy + 2*(1-tt)*tt*my + tt*tt*p2.sy;
+            const a  = Math.sin(tt*Math.PI)*0.85;
+            ctx.fillStyle = rgba(color, a);
+            ctx.beginPath();
+            ctx.arc(bx,by,r,0,Math.PI*2);
+            ctx.fill();
+        }
+
+        // â”€â”€ Draw one cluster â”€â”€ (NO ctx.filter â€” replaced with alpha-based DoF)
+        function drawCluster(c, pos){
+            const {sx,sy,depth,z} = pos;
+            const baseR = c.r * depth;
+            const isHov = c.hovered;
+
+            // Alpha-based depth-of-field: far nodes are dimmer (no blur â€” 10x cheaper)
+            const alpha  = Math.min(1, 0.45 + depth*0.65);
+            const gSize  = isHov ? baseR*4.2 : baseR*2.8;
+
+            // Outer ambient glow
+            const og = ctx.createRadialGradient(sx,sy,0,sx,sy,gSize);
+            og.addColorStop(0,   rgba(c.color, (isHov?0.22:0.1)*alpha));
+            og.addColorStop(0.4, rgba(c.color, (isHov?0.07:0.03)*alpha));
+            og.addColorStop(1,   rgba(c.color, 0));
+            ctx.fillStyle = og;
+            ctx.beginPath();
+            ctx.arc(sx,sy,gSize,0,Math.PI*2);
+            ctx.fill();
+
+            // Glass orb â€” shadowBlur ONLY on hovered cluster to save GPU
+            if (isHov) {
+                ctx.shadowBlur  = 22;
+                ctx.shadowColor = rgba(c.color, 0.85);
+            }
+            const gg = ctx.createRadialGradient(sx-baseR*0.3,sy-baseR*0.3,0,sx,sy,baseR);
+            gg.addColorStop(0,   rgba([255,255,255], 0.38*alpha));
+            gg.addColorStop(0.45,rgba(c.color, 0.55*alpha));
+            gg.addColorStop(0.85,rgba(c.color, 0.18*alpha));
+            gg.addColorStop(1,   rgba([0,0,0], 0.15));
+            ctx.fillStyle = gg;
+            ctx.beginPath();
+            ctx.arc(sx,sy,baseR,0,Math.PI*2);
+            ctx.fill();
+            if (isHov) ctx.shadowBlur = 0;
+
+            // Rim
+            ctx.strokeStyle = rgba(c.color, 0.55*alpha);
+            ctx.lineWidth   = isHov ? 1.8 : 0.9;
+            ctx.stroke();
+
+            // Specular highlight
+            ctx.fillStyle = rgba([255,255,255], 0.28*alpha);
+            ctx.beginPath();
+            ctx.arc(sx-baseR*0.3, sy-baseR*0.32, baseR*0.25, 0, Math.PI*2);
+            ctx.fill();
+
+            // Breathing glow (no shadow, just alpha pulse)
+            const breathe = 0.55 + 0.45*Math.sin(t*1.1+c.floatPhase);
+            ctx.globalAlpha = breathe*0.4*depth;
+            const bg = ctx.createRadialGradient(sx,sy,baseR*0.4,sx,sy,baseR*1.9);
+            bg.addColorStop(0, rgba(c.color,0.3));
+            bg.addColorStop(1, rgba(c.color,0));
+            ctx.fillStyle = bg;
+            ctx.beginPath();
+            ctx.arc(sx,sy,baseR*1.9,0,Math.PI*2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // Sub-nodes (lighter â€” no gradient, just solid alpha circles)
+            c.nodes.forEach(n=>{
+                const na  = n.phaseX + t*n.speed;
+                const nb  = n.phaseY + t*n.speed*0.65;
+                const nx3 = (pos.sx - W/2 - camX - parallaX) + Math.cos(na)*n.ox;
+                const ny3 = (pos.sy - H/2 - camY - parallaY) + Math.sin(nb)*n.oy;
+                const np  = project(nx3, ny3, z + Math.sin(na*0.5)*n.oz);
+                const nr  = n.r*np.depth;
+                if (nr < 0.8) return;
+                const na2 = Math.min(1, 0.3+np.depth*0.5);
+                // Connector line
+                ctx.beginPath();
+                ctx.moveTo(sx,sy);
+                ctx.lineTo(np.sx,np.sy);
+                ctx.strokeStyle = rgba(c.color, 0.12*na2);
+                ctx.lineWidth   = 0.4;
+                ctx.stroke();
+                // Sub-node dot
+                ctx.fillStyle = rgba([220,220,255], 0.55*na2);
+                ctx.beginPath();
+                ctx.arc(np.sx, np.sy, nr, 0, Math.PI*2);
+                ctx.fill();
+            });
+
+            // Store screen coords for hit-test
+            c.sx=sx; c.sy=sy; c.screenR=baseR;
+        }
+
+        // â”€â”€ Main render loop â”€â”€
+        let lastFrame=0;
+        function render(now){
+            if (!isVisible) { rafId=requestAnimationFrame(render); return; } // pause when off-screen
+            rafId = requestAnimationFrame(render);
+            const dt = Math.min((now-lastFrame)/1000, 0.05);
+            lastFrame = now;
+            t += dt;
+            frameCount++;
+
+            // Smooth camera drift from mouse
+            camX += ((mouseX-0.5)*55 - camX)*0.04 + Math.sin(t*0.065)*0.12;
+            camY += ((mouseY-0.5)*38 - camY)*0.04 + Math.cos(t*0.048)*0.09;
+
+            // Stars â€” update every 4th frame for performance
+            if (frameCount%4===0) animStars();
+
+            ctx.clearRect(0,0,W,H);
+
+            // Project all clusters
+            const positions = clusters.map(c=>{
+                const p = clusterPos(c);
+                return project(p.x,p.y,p.z);
+            });
+
+            // Painter's algorithm â€” back to front
+            const order = clusters.map((_,i)=>i).sort((a,b)=>positions[b].z-positions[a].z);
+
+            // Connections + pulses
+            CONNS.forEach(([ai,bi],ci)=>{
+                const pa=positions[ai], pb=positions[bi];
+                drawConn(pa,pb,clusters[ai],clusters[bi]);
+                pulseTimes[ci] = (pulseTimes[ci]+dt*0.16)%1;
+                drawPulse(pa,pb, pulseTimes[ci],        clusters[ai].color, 2.5);
+                drawPulse(pa,pb,(pulseTimes[ci]+0.52)%1, clusters[bi].color, 1.8);
+            });
+
+            // Clusters backâ†’front
+            order.forEach(i=> drawCluster(clusters[i], positions[i]));
+
+            // Hover label (cheap text draw)
+            if (hoveredIdx!==null){
+                const c=clusters[hoveredIdx];
+                ctx.font      = 'bold 12px Space Grotesk,sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = rgba(c.color, 0.92);
+                ctx.fillText(c.label, c.sx, c.sy-c.screenR-9);
+            }
+        }
+
+        // â”€â”€ IntersectionObserver â€” pause when not in view â”€â”€
+        const io = new IntersectionObserver(entries=>{
+            isVisible = entries[0].isIntersecting;
+            if (isVisible && !rafId) rafId=requestAnimationFrame(render);
+        }, { threshold:0.05 });
+        io.observe(section);
+
+        // â”€â”€ Also pause video when off-screen for extra perf â”€â”€
+        const bgVid = section.querySelector('.mu-bg-video');
+        const vidIo = new IntersectionObserver(entries=>{
+            if (!bgVid) return;
+            entries[0].isIntersecting ? bgVid.play() : bgVid.pause();
+        }, { threshold:0.05 });
+        if (bgVid) vidIo.observe(section);
+
+        // â”€â”€ Mouse â”€â”€
+        canvas.addEventListener('mousemove', e=>{
+            const rect=canvas.getBoundingClientRect();
+            mouseX=(e.clientX-rect.left)/W;
+            mouseY=(e.clientY-rect.top)/H;
+            const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+            let found=null;
+            clusters.forEach((c,i)=>{
+                const h=Math.hypot(mx-c.sx,my-c.sy)<c.screenR*2.8;
+                c.hovered=h;
+                if(h) found=i;
+            });
+            hoveredIdx=found;
+            canvas.style.cursor=found!==null?'pointer':'default';
+        });
+        canvas.addEventListener('mouseleave',()=>{
+            clusters.forEach(c=>c.hovered=false);
+            hoveredIdx=null; mouseX=0.5; mouseY=0.5;
+        });
+        canvas.addEventListener('click',e=>{
+            const rect=canvas.getBoundingClientRect();
+            const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+            clusters.forEach(c=>{ if(Math.hypot(mx-c.sx,my-c.sy)<c.screenR*3) openModal(c); });
+        });
+
+        // Scroll parallax
+        window.addEventListener('scroll',()=>{
+            const rect=section.getBoundingClientRect();
+            const rel=-rect.top/window.innerHeight;
+            parallaX=Math.sin(rel*0.8)*35;
+            parallaY=rel*55;
+        },{passive:true});
+
+        // â”€â”€ Modal â”€â”€
+        function openModal(c){
+            document.getElementById('mu-modal-icon').textContent  = c.icon;
+            document.getElementById('mu-modal-title').textContent = c.label;
+            document.getElementById('mu-modal-desc').textContent  = c.desc;
+            document.getElementById('mu-modal-tags').innerHTML    = c.tags.map(t=>`<span class="mu-modal-tag">${t}</span>`).join('');
+            document.getElementById('mu-modal-bar-fill').style.width = c.integrity+'%';
+            document.getElementById('mu-modal-meta').textContent  = `Integrity: ${c.integrity}%  Â·  Depth: ${Math.abs(Math.round(c.tiltY*100))} units`;
+            if(modal) modal.classList.add('active');
+        }
+        if(mClose) mClose.addEventListener('click',()=>modal.classList.remove('active'));
+        if(modal)  modal.addEventListener('click',e=>{ if(e.target===modal) modal.classList.remove('active'); });
+
+        // â”€â”€ HUD counters â”€â”€
+        function updateHUD(){
+            const nc=document.getElementById('mu-node-count');
+            const lc=document.getElementById('mu-link-count');
+            const ic=document.getElementById('mu-insight-count');
+            if(nc) nc.textContent=(240+Math.floor(Math.random()*20)).toString();
+            if(lc) lc.textContent=(1800+Math.floor(Math.random()*100)).toLocaleString();
+            if(ic) ic.textContent=(9200+Math.floor(Math.random()*300)).toLocaleString();
+        }
+        setInterval(updateHUD, 4000);
+
+        // â”€â”€ Boot â”€â”€
+        resize();
+        window.addEventListener('resize', resize, {passive:true});
+        rafId = requestAnimationFrame(render);
+    })();
 
 });
 
