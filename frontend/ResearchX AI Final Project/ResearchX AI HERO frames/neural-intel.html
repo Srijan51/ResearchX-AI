@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Intelligence Expansion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="neural-intel.css">
+</head>
+<body>
+
+    <!-- Immersive Neural Depth Background -->
+    <div id="neural-bg-layer" class="neural-bg-layer">
+        <canvas id="bg-network-canvas"></canvas>
+        <div class="glow-orb orb-primary"></div>
+        <div class="glow-orb orb-secondary"></div>
+    </div>
+
+    <!-- Initialization Transition Overlay -->
+    <div id="intel-boot-screen" class="intel-boot-screen">
+        <div class="boot-content">
+            <div class="boot-text">Expanding Intelligence Layer...</div>
+            <div class="boot-scanline"></div>
+        </div>
+    </div>
+
+    <!-- MAIN UI ENVIRONMENT -->
+    <main id="intel-env" class="intel-env hidden">
+        
+        <!-- Header / Active Query Context -->
+        <header class="query-context-banner stagger-in">
+            <div class="label-badge">
+                <span class="pulse-indicator"></span> ACTIVE QUERY
+            </div>
+            <h1 id="active-query-text" class="query-text">Processing incoming node...</h1>
+        </header>
+
+        <!-- Dynamic Grid Container -->
+        <div class="expansion-grid">
+            
+            <!-- CENTRAL CORE (AI Engine) -->
+            <div class="grid-panel panel-core stagger-in">
+                <div class="ai-core-engine">
+                    <!-- Rotating HUD Rings -->
+                    <svg viewBox="0 0 200 200" class="core-rings">
+                        <circle cx="100" cy="100" r="90" class="ring r-outer"/>
+                        <circle cx="100" cy="100" r="70" class="ring r-mid"/>
+                        <circle cx="100" cy="100" r="45" class="ring r-inner"/>
+                    </svg>
+                    <!-- Core Plasma -->
+                    <div class="core-plasma"></div>
+                    <div class="core-label">PROCESSING DATA VECTORS</div>
+                </div>
+            </div>
+
+            <!-- 1. DEEP INSIGHTS PANEL -->
+            <div class="grid-panel panel-insights glass-panel stagger-in">
+                <div class="panel-header">
+                    <svg class="h-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span>DEEP INSIGHT SYNTHESIS</span>
+                </div>
+                <div class="panel-body insights-body" id="insights-body">
+                    <div class="loading-pulse">Synthesizing semantic arrays...</div>
+                </div>
+            </div>
+
+            <!-- 2. DATA VISUALIZATION -->
+            <div class="grid-panel panel-dataviz glass-panel stagger-in">
+                <div class="panel-header">
+                    <svg class="h-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                    <span>METRIC DISTRIBUTION</span>
+                </div>
+                <div class="panel-body data-bars" id="metric-bars">
+                    <!-- Bars generated via JS -->
+                </div>
+                <div class="viz-footer">
+                    <div class="vf-stat"><span class="stat-lbl">PEAK VAR:</span> <span class="stat-val">94.2%</span></div>
+                    <div class="vf-stat"><span class="stat-lbl">R-SQUARE:</span> <span class="stat-val">0.89</span></div>
+                </div>
+            </div>
+
+            <!-- 3. GLOBAL CONNECTIONS -->
+            <div class="grid-panel panel-connections glass-panel stagger-in">
+                <div class="panel-header">
+                    <svg class="h-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    <span>NEURAL MAPPING</span>
+                </div>
+                <div class="panel-body mini-network" id="mini-network">
+                    <!-- Canvas specifically for the network mapping module -->
+                    <canvas id="module-network-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- 4. PREDICTIONS -->
+            <div class="grid-panel panel-predictions glass-panel stagger-in">
+                <div class="panel-header">
+                    <svg class="h-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span>PREDICTIVE TRAJECTORY</span>
+                </div>
+                <div class="panel-body pred-body">
+                    <div class="prob-circle">
+                        <svg viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" class="prob-bg"/>
+                            <circle cx="50" cy="50" r="40" class="prob-fill" id="prob-fill"/>
+                        </svg>
+                        <div class="prob-val" id="prob-val">0%</div>
+                    </div>
+                    <div class="pred-text" id="pred-text">Calculating highest probability path...</div>
+                </div>
+            </div>
+
+            <!-- 5. HIDDEN PATTERNS -->
+            <div class="grid-panel panel-patterns glass-panel stagger-in">
+                <div class="panel-header">
+                    <svg class="h-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    <span>ANOMALY DETECTION</span>
+                </div>
+                <div class="panel-body pattern-body" id="pattern-list">
+                    <!-- Pattern items injected via JS -->
+                </div>
+            </div>
+
+        </div> <!-- /expansion-grid -->
+
+        <!-- Bottom Controls / Refinement -->
+        <footer class="bottom-controls stagger-in">
+            <!-- AI Action Buttons -->
+            <div class="ai-actions">
+                <button class="ai-action-btn" data-action="explore">Explore Deeper Layer</button>
+                <button class="ai-action-btn" data-action="compare">Cross-Reference Data</button>
+                <button class="ai-action-btn" data-action="summary">Generate Executive Summary</button>
+            </div>
+            
+            <!-- Optional manual refinement layer -->
+            <div class="refine-layer">
+                <div class="refine-input-wrapper">
+                    <span class="prompt-arrow">></span>
+                    <input type="text" id="refine-input" placeholder="Refine intelligence further..." autocomplete="off">
+                </div>
+            </div>
+            
+            <a href="index.html#deep-dive" class="return-link">← Return to Base Dashboard</a>
+        </footer>
+
+    </main>
+
+    <script src="neural-intel.js"></script>
+</body>
+</html>

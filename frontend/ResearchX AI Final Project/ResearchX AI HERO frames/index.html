@@ -866,7 +866,7 @@
 
                 <!-- Control Bar -->
                 <div class="oc-control-bar">
-                    <button class="oc-btn">Download Intelligence</button>
+                    <button class="oc-btn" id="download-intelligence-btn">Download Intelligence</button>
                     <button class="oc-btn">Export Schema</button>
                     <button class="oc-btn">API Stream</button>
                     <button class="oc-btn secondary">Share Output</button>
@@ -966,6 +966,199 @@
             </div>
         </section>
     </main>
+
+    <!-- ═══════════════════════════════════════════════
+         AI EXPORT MODAL — Cinematic PDF Export System
+    ═══════════════════════════════════════════════ -->
+    <div id="ai-export-overlay" class="aex-overlay" aria-hidden="true">
+
+        <!-- Holographic background grid + streaks -->
+        <div class="aex-bg-grid"></div>
+        <div class="aex-streak s1"></div>
+        <div class="aex-streak s2"></div>
+        <div class="aex-streak s3"></div>
+
+        <!-- Main panel -->
+        <div class="aex-panel" id="aex-panel" role="dialog" aria-modal="true" aria-label="AI Export System">
+
+            <!-- Corner brackets -->
+            <div class="aex-corner tl"></div>
+            <div class="aex-corner tr"></div>
+            <div class="aex-corner bl"></div>
+            <div class="aex-corner br"></div>
+
+            <!-- Scanline effect -->
+            <div class="aex-scanline"></div>
+
+            <!-- Canvas for particles inside panel -->
+            <canvas class="aex-particle-canvas" id="aex-particle-canvas"></canvas>
+
+            <!-- Header -->
+            <div class="aex-header">
+                <div class="aex-sys-indicators">
+                    <span class="aex-ind blink"></span>
+                    <span class="aex-ind pulse-slow"></span>
+                    <span class="aex-ind blink" style="animation-delay:.4s"></span>
+                </div>
+                <div class="aex-title-block">
+                    <div class="aex-sup-label">ResearchX <span>AI</span> // EXPORT ENGINE v2.4</div>
+                    <h2 class="aex-title" id="aex-title">GENERATING INTELLIGENCE DOCUMENT</h2>
+                    <p class="aex-subtitle" id="aex-subtitle">Compiling structured research output...</p>
+                </div>
+                <div class="aex-sys-indicators">
+                    <span class="aex-ind" style="animation-delay:.2s"></span>
+                    <span class="aex-ind blink" style="animation-delay:.6s"></span>
+                    <span class="aex-ind pulse-slow" style="animation-delay:.1s"></span>
+                </div>
+            </div>
+
+            <!-- Progress ring + sound-wave visualiser -->
+            <div class="aex-progress-zone">
+
+                <!-- Sound-wave bars (visual only, reacts to progress) -->
+                <div class="aex-wave-wrap left" id="aex-wave-left">
+                    <span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span>
+                </div>
+
+                <!-- Circular ring -->
+                <div class="aex-ring-wrap">
+                    <svg class="aex-ring-svg" viewBox="0 0 200 200">
+                        <defs>
+                            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00F3FF"/>
+                                <stop offset="100%" stop-color="#9D00FF"/>
+                            </linearGradient>
+                            <filter id="ringGlow">
+                                <feGaussianBlur stdDeviation="3" result="blur"/>
+                                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>
+                        </defs>
+                        <!-- Track -->
+                        <circle cx="100" cy="100" r="84" class="aex-ring-track"/>
+                        <!-- Progress arc -->
+                        <circle cx="100" cy="100" r="84" class="aex-ring-fill" id="aex-ring-fill"
+                                filter="url(#ringGlow)"
+                                stroke="url(#ringGrad)"
+                                stroke-dasharray="527.8"
+                                stroke-dashoffset="527.8"/>
+                        <!-- Pulse glow ring -->
+                        <circle cx="100" cy="100" r="84" class="aex-ring-pulse" id="aex-ring-pulse"/>
+                        <!-- Outer dashes ring -->
+                        <circle cx="100" cy="100" r="94" class="aex-ring-dashes"/>
+                    </svg>
+                    <!-- Animated dots orbiting -->
+                    <div class="aex-orbit-dot d1"></div>
+                    <div class="aex-orbit-dot d2"></div>
+                    <!-- Percentage counter -->
+                    <div class="aex-pct-wrap">
+                        <span class="aex-pct" id="aex-pct">0</span>
+                        <span class="aex-pct-sym">%</span>
+                    </div>
+                    <!-- Check icon (hidden until complete) -->
+                    <div class="aex-check" id="aex-check" aria-hidden="true">
+                        <svg viewBox="0 0 60 60" fill="none">
+                            <polyline points="10,30 24,44 50,16" stroke="#00F3FF"
+                                      stroke-width="5" stroke-linecap="round" stroke-linejoin="round"
+                                      class="aex-check-line" id="aex-check-line"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Sound-wave bars right -->
+                <div class="aex-wave-wrap right" id="aex-wave-right">
+                    <span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <!-- Live log terminal -->
+            <div class="aex-log-terminal" id="aex-log-terminal" aria-live="polite">
+                <div class="aex-log-header">
+                    <span class="aex-log-dot"></span>
+                    <span class="aex-log-dot" style="background:#FFD700;animation-delay:.3s"></span>
+                    <span class="aex-log-dot" style="background:#00FF88;animation-delay:.6s"></span>
+                    <span class="aex-log-title">// LIVE_PROCESS_LOG</span>
+                </div>
+                <div class="aex-log-body" id="aex-log-body"></div>
+            </div>
+
+            <!-- Data flow lines -->
+            <div class="aex-dataflow-wrap" aria-hidden="true">
+                <svg class="aex-dataflow-svg" viewBox="0 0 600 40" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="dfGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#00F3FF" stop-opacity="0"/>
+                            <stop offset="40%" stop-color="#00F3FF" stop-opacity="0.8"/>
+                            <stop offset="60%" stop-color="#9D00FF" stop-opacity="0.8"/>
+                            <stop offset="100%" stop-color="#9D00FF" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    <line x1="0" y1="10" x2="600" y2="10" class="aex-df-line"/>
+                    <line x1="0" y1="22" x2="600" y2="22" class="aex-df-line" style="animation-delay:.5s;opacity:.5"/>
+                    <line x1="0" y1="32" x2="600" y2="32" class="aex-df-line" style="animation-delay:1s;opacity:.3"/>
+                    <!-- Travelling pulse -->
+                    <circle r="4" class="aex-df-pulse dp1">
+                        <animateMotion dur="1.8s" repeatCount="indefinite" begin="0s"
+                                       path="M0,10 L600,10"/>
+                    </circle>
+                    <circle r="3" class="aex-df-pulse dp2">
+                        <animateMotion dur="2.4s" repeatCount="indefinite" begin=".6s"
+                                       path="M0,22 L600,22"/>
+                    </circle>
+                </svg>
+            </div>
+
+            <!-- Footer: status row -->
+            <div class="aex-footer" id="aex-footer">
+                <div class="aex-footer-stat">
+                    <span class="aex-fs-dot"></span>
+                    <span class="aex-fs-label">NODE</span>
+                    <span class="aex-fs-val" id="aex-node-val">ACTIVE</span>
+                </div>
+                <div class="aex-footer-stat">
+                    <span class="aex-fs-dot" style="background:#9D00FF"></span>
+                    <span class="aex-fs-label">LATENCY</span>
+                    <span class="aex-fs-val" id="aex-lat-val">14ms</span>
+                </div>
+                <div class="aex-footer-stat">
+                    <span class="aex-fs-dot" style="background:#FFD700"></span>
+                    <span class="aex-fs-label">THROUGHPUT</span>
+                    <span class="aex-fs-val" id="aex-tp-val">2.4 GB/s</span>
+                </div>
+                <div class="aex-footer-stat">
+                    <span class="aex-fs-dot" style="background:#00FF88"></span>
+                    <span class="aex-fs-label">INTEGRITY</span>
+                    <span class="aex-fs-val">99.8%</span>
+                </div>
+            </div>
+
+            <!-- CTA area (hidden until complete) -->
+            <div class="aex-cta" id="aex-cta" aria-hidden="true">
+                <button class="aex-dl-btn" id="aex-dl-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round" class="aex-dl-icon">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>DOWNLOAD FILE</span>
+                    <div class="aex-btn-ripple" id="aex-btn-ripple"></div>
+                </button>
+            </div>
+
+        </div><!-- /aex-panel -->
+    </div><!-- /ai-export-overlay -->
+
+    <!-- Toast -->
+    <div class="aex-toast" id="aex-toast" aria-live="assertive">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round" class="aex-toast-icon">
+            <path d="M20 6L9 17l-5-5"/>
+        </svg>
+        Download Complete
+    </div>
+
 
     <!-- Footer -->
     <footer class="site-footer">

@@ -1823,3 +1823,579 @@ function initOutputCommandCenter() {
 document.addEventListener('DOMContentLoaded', initOutputCommandCenter);
 
 
+
+
+/* -----------------------------------------------------------
+   AI EXPORT SYSTEM — Cinematic PDF Generation Engine
+   ----------------------------------------------------------- */
+(function() {
+    'use strict';
+
+    /* -- Config -- */
+    const TOTAL_DURATION_MS  = 5800;   // total processing animation time
+    const DOWNLOAD_DELAY_MS  = 900;    // pause before auto-triggering download after 100%
+    const PANEL_EXIT_MS      = 1400;   // time overlay stays after download before closing
+    const TOAST_DURATION_MS  = 3200;
+
+    /* -- Log messages sequenced during processing -- */
+    const LOG_STEPS = [
+        { pct: 0,   tag: '[INIT]',   cls: '',            msg: 'Establishing secure export channel...' },
+        { pct: 5,   tag: '[SYS]',    cls: '',            msg: 'Authenticating intelligence node — v2.4.7' },
+        { pct: 12,  tag: '[DATA]',   cls: '',            msg: 'Collecting raw data nodes from memory corpus...' },
+        { pct: 20,  tag: '[PROC]',   cls: '',            msg: 'Decompressing 2.4 TB neural archive...' },
+        { pct: 28,  tag: '[AI]',     cls: '',            msg: 'Structuring multi-dimensional analysis matrix...' },
+        { pct: 36,  tag: '[PARSE]',  cls: '',            msg: 'Cross-referencing 1,247 knowledge clusters...' },
+        { pct: 44,  tag: '[AI]',     cls: '',            msg: 'Generating insights — confidence threshold: 98.4%' },
+        { pct: 52,  tag: '[WARN]',   cls: 'aex-log-warn',msg: 'Ambiguous node detected — auto-resolving...' },
+        { pct: 58,  tag: '[PROC]',   cls: '',            msg: 'Resolving schema conflicts via entropy filter...' },
+        { pct: 65,  tag: '[REND]',   cls: '',            msg: 'Rendering PDF format — applying holographic layout...' },
+        { pct: 73,  tag: '[COMP]',   cls: '',            msg: 'Compressing output to 4.2 MB — lossless mode...' },
+        { pct: 80,  tag: '[CHECK]',  cls: '',            msg: 'Running integrity verification — 99.8% pass rate...' },
+        { pct: 88,  tag: '[SIGN]',   cls: '',            msg: 'Applying cryptographic signature hash...' },
+        { pct: 94,  tag: '[FINAL]',  cls: '',            msg: 'Finalising intelligence document package...' },
+        { pct: 100, tag: '[DONE]',   cls: 'aex-log-ok',  msg: 'Document generated successfully — READY FOR EXPORT' },
+    ];
+
+    /* -- State -- */
+    let overlayActive   = false;
+    let animFrameId     = null;
+    let particleRaf     = null;
+    let aexParticles    = [];
+    let footerInterval  = null;
+    let waveRaf         = null;
+
+    /* -- DOM refs (resolved at init time) -- */
+    let overlay, panel, ringFill, ringPulse, pctEl, checkEl, checkLine,
+        logBody, titleEl, subtitleEl, ctaEl, dlBtn, toast,
+        waveLeft, waveRight, pcCanvas, pcCtx;
+
+    /* -----------------------------------------
+       INITIALISE
+    ----------------------------------------- */
+    function init() {
+        overlay   = document.getElementById('ai-export-overlay');
+        panel     = document.getElementById('aex-panel');
+        ringFill  = document.getElementById('aex-ring-fill');
+        ringPulse = document.getElementById('aex-ring-pulse');
+        pctEl     = document.getElementById('aex-pct');
+        checkEl   = document.getElementById('aex-check');
+        checkLine = document.getElementById('aex-check-line');
+        logBody   = document.getElementById('aex-log-body');
+        titleEl   = document.getElementById('aex-title');
+        subtitleEl= document.getElementById('aex-subtitle');
+        ctaEl     = document.getElementById('aex-cta');
+        dlBtn     = document.getElementById('aex-dl-btn');
+        toast     = document.getElementById('aex-toast');
+        waveLeft  = document.getElementById('aex-wave-left');
+        waveRight = document.getElementById('aex-wave-right');
+        pcCanvas  = document.getElementById('aex-particle-canvas');
+
+        if (!overlay || !panel) return;
+
+        if (pcCanvas) pcCtx = pcCanvas.getContext('2d');
+
+        /* Bind trigger button */
+        const triggerBtn = document.getElementById('download-intelligence-btn');
+        if (triggerBtn) {
+            triggerBtn.addEventListener('click', launchExportSequence);
+        }
+
+        /* Download button inside modal */
+        if (dlBtn) {
+            dlBtn.addEventListener('click', function(e) {
+                addRippleEffect(dlBtn);
+                triggerPDFDownload();
+                setTimeout(closeOverlay, PANEL_EXIT_MS);
+            });
+        }
+
+        /* Click overlay backdrop to cancel (only before completion) */
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay && !overlayActive) return;
+            /* Allow close only after complete */
+            if (panel.classList.contains('aex-complete')) {
+                closeOverlay();
+            }
+        });
+    }
+
+    /* -----------------------------------------
+       LAUNCH SEQUENCE
+    ----------------------------------------- */
+    function launchExportSequence() {
+        if (overlayActive) return;
+        overlayActive = true;
+
+        /* Reset state */
+        resetUI();
+
+        /* Show overlay */
+        overlay.classList.add('aex-active');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        /* Start particle engine */
+        startPanelParticles();
+
+        /* Animate footer stats */
+        startFooterAnimation();
+
+        /* Start wave animation */
+        startWaveAnimation();
+
+        /* Run the progress animation */
+        animateProgress();
+    }
+
+    /* -----------------------------------------
+       RESET
+    ----------------------------------------- */
+    function resetUI() {
+        /* Ring */
+        setRingProgress(0);
+        if (pctEl) pctEl.textContent = '0';
+
+        /* Check hidden */
+        if (checkEl) checkEl.classList.remove('aex-visible');
+
+        /* Title / subtitle */
+        if (titleEl)    titleEl.textContent   = 'GENERATING INTELLIGENCE DOCUMENT';
+        if (subtitleEl) subtitleEl.textContent = 'Compiling structured research output...';
+
+        /* CTA hidden */
+        if (ctaEl) ctaEl.classList.remove('aex-visible');
+        if (ctaEl) ctaEl.setAttribute('aria-hidden', 'true');
+
+        /* Clear logs */
+        if (logBody) logBody.innerHTML = '';
+
+        /* Remove complete state */
+        if (panel) panel.classList.remove('aex-complete');
+
+        /* Toast hidden */
+        if (toast) toast.classList.remove('aex-toast-show');
+    }
+
+    /* -----------------------------------------
+       PROGRESS ANIMATION
+    ----------------------------------------- */
+    function animateProgress() {
+        const startTime   = performance.now();
+        let   lastLogIdx  = -1;
+        let   lastPct     = -1;
+
+        function tick(now) {
+            const elapsed = now - startTime;
+            const rawPct  = Math.min(elapsed / TOTAL_DURATION_MS, 1);
+
+            /* Eased progress — slow start, fast middle, slow finish */
+            const eased = easeInOutCubic(rawPct);
+            const pct   = Math.round(eased * 100);
+
+            if (pct !== lastPct) {
+                lastPct = pct;
+                updateRing(pct);
+
+                /* Drive wave intensity from progress */
+                updateWaveIntensity(pct);
+            }
+
+            /* Dispatch log steps */
+            for (let i = lastLogIdx + 1; i < LOG_STEPS.length; i++) {
+                if (pct >= LOG_STEPS[i].pct) {
+                    appendLog(LOG_STEPS[i]);
+                    lastLogIdx = i;
+                } else {
+                    break;
+                }
+            }
+
+            /* Update subtitle with live status hint */
+            updateSubtitle(pct);
+
+            if (rawPct < 1) {
+                animFrameId = requestAnimationFrame(tick);
+            } else {
+                onComplete();
+            }
+        }
+
+        animFrameId = requestAnimationFrame(tick);
+    }
+
+    function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    /* -----------------------------------------
+       RING UPDATE
+    ----------------------------------------- */
+    const CIRCUMFERENCE = 2 * Math.PI * 84; // = 527.8
+
+    function setRingProgress(pct) {
+        if (!ringFill) return;
+        const offset = CIRCUMFERENCE * (1 - pct / 100);
+        ringFill.style.strokeDashoffset = offset;
+    }
+
+    function updateRing(pct) {
+        setRingProgress(pct);
+        if (pctEl) pctEl.textContent = pct;
+
+        /* Brighten glow as it fills */
+        if (ringFill) {
+            const intensity = 0.12 + (pct / 100) * 0.28;
+            panel.style.boxShadow = `0 0 ${40 + pct}px rgba(0,243,255,${intensity}), 0 0 ${80 + pct}px rgba(157,0,255,${intensity * 0.5}), inset 0 0 40px rgba(0,243,255,0.03)`;
+        }
+    }
+
+    /* -----------------------------------------
+       SUBTITLE CYCLING
+    ----------------------------------------- */
+    const SUBTITLES = [
+        'Compiling structured research output...',
+        'Initialising neural encoding...',
+        'Mapping knowledge topology...',
+        'Cross-referencing data vectors...',
+        'Applying intelligence compression...',
+        'Rendering holographic PDF layout...',
+        'Verifying cryptographic signature...',
+        'Finalising intelligence package...',
+    ];
+    let subtitleIdx = 0;
+    let lastSubPct  = -10;
+
+    function updateSubtitle(pct) {
+        if (!subtitleEl) return;
+        if (pct - lastSubPct >= 12) {
+            lastSubPct = pct;
+            subtitleEl.style.opacity = '0';
+            setTimeout(() => {
+                subtitleEl.textContent = SUBTITLES[subtitleIdx % SUBTITLES.length];
+                subtitleEl.style.opacity = '1';
+                subtitleIdx++;
+            }, 180);
+        }
+        subtitleEl.style.transition = 'opacity 0.18s ease';
+    }
+
+    /* -----------------------------------------
+       LOG APPEND
+    ----------------------------------------- */
+    function appendLog(step) {
+        if (!logBody) return;
+        const ts = new Date().toTimeString().slice(0, 8);
+        const line = document.createElement('div');
+        line.className = 'aex-log-line' + (step.cls ? ' ' + step.cls : '');
+        line.innerHTML = `<span class="aex-log-ts">[${ts}]</span><span class="aex-log-tag">${step.tag}</span>${step.msg}`;
+        logBody.appendChild(line);
+        logBody.scrollTop = logBody.scrollHeight;
+    }
+
+    /* -----------------------------------------
+       COMPLETION
+    ----------------------------------------- */
+    function onComplete() {
+        panel.classList.add('aex-complete');
+
+        /* Hide percentage, show check */
+        if (pctEl) pctEl.style.opacity = '0';
+        if (checkEl) {
+            checkEl.classList.add('aex-visible');
+            checkEl.setAttribute('aria-hidden', 'false');
+        }
+
+        /* Update title */
+        if (titleEl) {
+            titleEl.style.transition = 'opacity 0.3s ease';
+            titleEl.style.opacity = '0';
+            setTimeout(() => {
+                titleEl.textContent = 'DOCUMENT READY';
+                titleEl.style.background = 'linear-gradient(135deg, #00FF88 0%, #00F3FF 100%)';
+                titleEl.style.webkitBackgroundClip = 'text';
+                titleEl.style.backgroundClip = 'text';
+                titleEl.style.webkitTextFillColor = 'transparent';
+                titleEl.style.opacity = '1';
+            }, 320);
+        }
+        if (subtitleEl) {
+            subtitleEl.textContent = 'Intelligence document generated — ready for download.';
+        }
+
+        /* Wave max intensity */
+        updateWaveIntensity(100);
+
+        /* Show CTA */
+        setTimeout(() => {
+            if (ctaEl) {
+                ctaEl.classList.add('aex-visible');
+                ctaEl.removeAttribute('aria-hidden');
+            }
+            /* Auto-trigger download */
+            triggerPDFDownload();
+            /* Auto-close after delay */
+            setTimeout(closeOverlay, PANEL_EXIT_MS + 1200);
+        }, DOWNLOAD_DELAY_MS);
+    }
+
+    /* -----------------------------------------
+       PDF DOWNLOAD TRIGGER
+    ----------------------------------------- */
+    function triggerPDFDownload() {
+        /* Generate a minimal placeholder PDF as a data-URI blob */
+        const pdfContent = `%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj
+xref
+0 4
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+trailer<</Size 4/Root 1 0 R>>
+startxref
+216
+%%EOF`;
+        const blob = new Blob([pdfContent], { type: 'application/pdf' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'ResearchX_Intelligence_Report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        showToast();
+    }
+
+    /* -----------------------------------------
+       CLOSE OVERLAY
+    ----------------------------------------- */
+    function closeOverlay() {
+        if (!overlay) return;
+
+        /* Fade panel out first */
+        if (panel) {
+            panel.style.transition = 'opacity 0.45s ease, transform 0.45s ease';
+            panel.style.opacity = '0';
+            panel.style.transform = 'scale(0.92) translateY(14px)';
+        }
+
+        setTimeout(() => {
+            overlay.classList.remove('aex-active');
+            overlay.setAttribute('aria-hidden', 'true');
+            overlayActive = false;
+
+            /* Restore panel */
+            if (panel) {
+                panel.style.opacity = '';
+                panel.style.transform = '';
+                panel.style.transition = '';
+                panel.style.boxShadow = '';
+            }
+
+            /* Stop engines */
+            stopPanelParticles();
+            stopFooterAnimation();
+            stopWaveAnimation();
+            cancelAnimationFrame(animFrameId);
+        }, 480);
+    }
+
+    /* -----------------------------------------
+       TOAST
+    ----------------------------------------- */
+    function showToast() {
+        if (!toast) return;
+        toast.classList.add('aex-toast-show');
+        setTimeout(() => toast.classList.remove('aex-toast-show'), TOAST_DURATION_MS);
+    }
+
+    /* -----------------------------------------
+       RIPPLE ON BUTTON
+    ----------------------------------------- */
+    function addRippleEffect(btn) {
+        const rippleEl = btn.querySelector('.aex-btn-ripple');
+        if (!rippleEl) return;
+        rippleEl.style.animation = 'none';
+        rippleEl.getBoundingClientRect(); /* flush */
+        rippleEl.style.animation = '';
+    }
+
+    /* -----------------------------------------
+       PANEL PARTICLES (Canvas inside panel)
+    ----------------------------------------- */
+    function startPanelParticles() {
+        if (!pcCanvas || !pcCtx) return;
+
+        /* Size canvas to panel */
+        resizePanelCanvas();
+
+        aexParticles = [];
+        const count = 38;
+        for (let i = 0; i < count; i++) {
+            aexParticles.push(createPanelParticle());
+        }
+
+        function drawLoop() {
+            if (!overlayActive) return;
+            pcCtx.clearRect(0, 0, pcCanvas.width, pcCanvas.height);
+            aexParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                if (p.life <= 0 || p.x < 0 || p.x > pcCanvas.width || p.y < 0 || p.y > pcCanvas.height) {
+                    Object.assign(p, createPanelParticle());
+                }
+                const alpha = p.life * p.opacity;
+                pcCtx.globalAlpha = alpha;
+                pcCtx.fillStyle   = p.color;
+                pcCtx.shadowBlur  = 8;
+                pcCtx.shadowColor = p.color;
+                pcCtx.beginPath();
+                pcCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                pcCtx.fill();
+            });
+            pcCtx.globalAlpha = 1;
+            pcCtx.shadowBlur  = 0;
+            particleRaf = requestAnimationFrame(drawLoop);
+        }
+        particleRaf = requestAnimationFrame(drawLoop);
+    }
+
+    function createPanelParticle() {
+        const w = pcCanvas ? pcCanvas.width  : 680;
+        const h = pcCanvas ? pcCanvas.height : 600;
+        const colors = ['#00F3FF', '#9D00FF', '#00FF88', '#FFD700'];
+        return {
+            x:       Math.random() * w,
+            y:       Math.random() * h,
+            size:    Math.random() * 2.2 + 0.6,
+            vx:      (Math.random() - 0.5) * 0.55,
+            vy:      (Math.random() - 0.5) * 0.55,
+            opacity: Math.random() * 0.6 + 0.2,
+            life:    1,
+            decay:   Math.random() * 0.004 + 0.001,
+            color:   colors[Math.floor(Math.random() * colors.length)],
+        };
+    }
+
+    function resizePanelCanvas() {
+        if (!pcCanvas || !panel) return;
+        const rect = panel.getBoundingClientRect();
+        pcCanvas.width  = rect.width  || 680;
+        pcCanvas.height = rect.height || 600;
+    }
+
+    function stopPanelParticles() {
+        cancelAnimationFrame(particleRaf);
+        if (pcCtx && pcCanvas) pcCtx.clearRect(0, 0, pcCanvas.width, pcCanvas.height);
+        aexParticles = [];
+    }
+
+    /* -----------------------------------------
+       FOOTER STATS ANIMATION
+    ----------------------------------------- */
+    function startFooterAnimation() {
+        const latEl = document.getElementById('aex-lat-val');
+        const tpEl  = document.getElementById('aex-tp-val');
+
+        footerInterval = setInterval(() => {
+            if (latEl) latEl.textContent = (Math.random() * 20 + 8).toFixed(0) + 'ms';
+            if (tpEl)  tpEl.textContent  = (Math.random() * 1.5 + 1.8).toFixed(1) + ' GB/s';
+        }, 1100);
+    }
+    function stopFooterAnimation() {
+        clearInterval(footerInterval);
+    }
+
+    /* -----------------------------------------
+       SOUND-WAVE VISUAL (reacts to progress %)
+    ----------------------------------------- */
+    let currentWaveIntensity = 0.15;
+    let targetWaveIntensity  = 0.15;
+
+    function startWaveAnimation() {
+        function waveLoop() {
+            if (!overlayActive) return;
+
+            /* Smooth lerp toward target */
+            currentWaveIntensity += (targetWaveIntensity - currentWaveIntensity) * 0.08;
+
+            /* Drive each bar in both wave groups */
+            [waveLeft, waveRight].forEach((wrap, side) => {
+                if (!wrap) return;
+                const spans = wrap.querySelectorAll('span');
+                spans.forEach((span, i) => {
+                    /* Individual bar oscillation */
+                    const t    = performance.now() / 1000;
+                    const freq = 1.4 + i * 0.3;
+                    const wave = (Math.sin(t * freq + i * 0.8 + side * Math.PI) + 1) / 2;
+                    const h    = 10 + wave * currentWaveIntensity * 90; /* 10%–100% of height */
+                    span.style.height = h + '%';
+                });
+            });
+
+            waveRaf = requestAnimationFrame(waveLoop);
+        }
+        waveRaf = requestAnimationFrame(waveLoop);
+    }
+
+    function updateWaveIntensity(pct) {
+        /* Maps 0?100% progress to 0.15?1.0 wave intensity */
+        targetWaveIntensity = 0.15 + (pct / 100) * 0.85;
+    }
+
+    function stopWaveAnimation() {
+        cancelAnimationFrame(waveRaf);
+        /* Reset bars */
+        [waveLeft, waveRight].forEach(wrap => {
+            if (!wrap) return;
+            wrap.querySelectorAll('span').forEach(s => s.style.height = '10%');
+        });
+    }
+
+    /* -----------------------------------------
+       BOOT
+    ----------------------------------------- */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
+
+/* -----------------------------------------------------------
+   DEEP DIVE NEURAL REDIRECT
+   ----------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+    const askBtn = document.getElementById('deep-dive-ask-btn');
+    const questionInput = document.getElementById('deep-dive-question');
+    
+    if (askBtn) {
+        askBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const q = questionInput && questionInput.value ? questionInput.value.trim() : '';
+            if (q) {
+                window.location.href = `neural-intel.html?q=${encodeURIComponent(q)}`;
+            } else {
+                window.location.href = 'neural-intel.html';
+            }
+        });
+    }
+    
+    if (questionInput) {
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                askBtn.click();
+            }
+        });
+    }
+});
+
+
+
+
