@@ -5,3 +5,13 @@ beautifulsoup4
 langchain
 langchain-community
 faiss-cpu
+langchain-embeddings
+openai
+sentence-transformers
+langchain-vectorstores
+app.api.scraper
+app.pipeline.vector_store
+app.pipeline.chunking
+app.pipeline.embedding
+
+
